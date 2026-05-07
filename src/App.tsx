@@ -6,6 +6,8 @@ const TC = { "<$50": "#6b7280", "$50-$99": "#059669", "$100-$199": "#2563eb", "$
 const TIERS = Object.keys(TC);
 const fmt = n => n >= 0 ? "$" + Math.abs(n).toLocaleString() : "-$" + Math.abs(n).toLocaleString();
 const tierOf = bi => bi < 50 ? "<$50" : bi < 100 ? "$50-$99" : bi < 200 ? "$100-$199" : bi < 300 ? "$200-$299" : "$300-$499";
+const rankLabel = l => l.live_rank_in_league != null && l.live_rosters_in_league != null ? "Rank " + l.live_rank_in_league + " of " + l.live_rosters_in_league : null;
+const edgeFreshnessLabel = l => l.edge_updated_at ? "Updated " + l.edge_updated_at : "Pre-season";
 
 function calcEV(l) {
   const e = l.edge_score || 80;
@@ -311,7 +313,12 @@ export default function App() {
                   {diagnosed.map((l, i) => (
                     <tr key={l.id} style={{ borderTop: "1px solid #f5f5f5", background: l.won_championship ? "#fffbeb" : excluded.has(l.id) ? "#fef2f2" : "#fff", opacity: excluded.has(l.id) ? 0.5 : 1 }}>
                       <td style={{ padding: "7px 8px", color: "#94a3b8", fontSize: 9 }}>{i + 1}</td>
-                      <td style={{ padding: "7px 8px", fontWeight: 600, fontSize: 12 }}>{l.league_name}{l.won_championship ? " \u{1F3C6}" : ""}</td>
+                      <td style={{ padding: "7px 8px" }}>
+                        <div style={{ fontWeight: 600, fontSize: 12 }}>{l.league_name}{l.won_championship ? " \u{1F3C6}" : ""}</div>
+                        <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2 }}>
+                          {[rankLabel(l), edgeFreshnessLabel(l)].filter(Boolean).join(" | ")}
+                        </div>
+                      </td>
                       <td style={{ padding: "7px 8px", textAlign: "center" }}><span style={{ fontSize: 8, padding: "1px 6px", borderRadius: 8, background: l.format === "redraft" ? "#dbeafe" : "#f0fdf4", color: l.format === "redraft" ? "#2563eb" : "#059669", fontWeight: 600 }}>{l.format || "dynasty"}</span></td>
                       <td style={{ padding: "7px 8px", textAlign: "center", fontWeight: 600 }}>{fmt(l.buy_in)}</td>
                       <td style={{ padding: "7px 8px", textAlign: "center", fontWeight: 700, fontSize: 10, color: (l.edge_score || 0) >= 90 ? "#059669" : (l.edge_score || 0) >= 80 ? "#d97706" : "#dc2626" }}>{l.edge_score ? l.edge_score.toFixed(0) : "-"}</td>
@@ -411,8 +418,11 @@ export default function App() {
                             <span style={{ fontSize: 8, padding: "1px 5px", borderRadius: 6, background: l.format === "redraft" ? "#dbeafe" : "#f0fdf4", color: l.format === "redraft" ? "#2563eb" : "#059669", fontWeight: 600 }}>{l.format || "dynasty"}</span>
                             {l.archetype && <span style={{ fontSize: 8, padding: "1px 5px", borderRadius: 6, background: "#f1f5f9", color: "#64748b", fontWeight: 600 }}>{l.archetype}</span>}
                           </div>
+                          <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 3 }}>
+                            {[rankLabel(l), edgeFreshnessLabel(l)].filter(Boolean).join(" | ")}
+                          </div>
                           <div style={{ fontSize: 10, color: "#64748b", marginTop: 3 }}>
-                            {fmt(l.buy_in)}/yr, {(l.edge_score || 0).toFixed(0)} edge, {ev.pp}% playoff, {ev.be} BE, {ev.upside}x upside{h ? ", " + h.yr + " seasons" : ""}
+                            {fmt(l.buy_in)}/yr, {l.edge_score != null ? l.edge_score.toFixed(0) + " edge" : "Pre-season edge"}, {ev.pp}% playoff, {ev.be} BE, {ev.upside}x upside{h ? ", " + h.yr + " seasons" : ""}
                           </div>
                           <div style={{ fontSize: 11, color: dx.c, fontWeight: 600, marginTop: 4 }}>{dx.r}</div>
                           <div style={{ fontSize: 10, color: "#64748b", fontStyle: "italic", marginTop: 2 }}>{dx.a}</div>
