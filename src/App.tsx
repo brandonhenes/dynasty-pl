@@ -6,7 +6,7 @@ const TC = { "<$50": "#6b7280", "$50-$99": "#059669", "$100-$199": "#2563eb", "$
 const TIERS = Object.keys(TC);
 const fmt = n => n >= 0 ? "$" + Math.abs(n).toLocaleString() : "-$" + Math.abs(n).toLocaleString();
 const tierOf = bi => bi < 50 ? "<$50" : bi < 100 ? "$50-$99" : bi < 200 ? "$100-$199" : bi < 300 ? "$200-$299" : "$300-$499";
-const rankLabel = l => l.live_rank_in_league != null && l.live_rosters_in_league != null ? "Rank " + l.live_rank_in_league + " of " + l.live_rosters_in_league : null;
+const rankLabel = l => l.live_rank_in_league != null ? "Rank " + l.live_rank_in_league + " of " + (l.teams || 12) : null;
 const edgeFreshnessLabel = l => l.edge_updated_at ? "Updated " + l.edge_updated_at : "Pre-season";
 
 function calcEV(l) {
@@ -227,7 +227,21 @@ export default function App() {
   const saveLeague = async (l) => {
     try { await upsertLeague({ ...l, season: l.season || curSeason }); setSF(false); setEL(null); load(); } catch (e) { console.error(e); }
   };
-  const delLeague = async (id) => { try { await delApi(id); load(); } catch (e) { console.error(e); } };
+  const delLeague = async (id) => {
+    if (!window.confirm("Delete this league?")) return;
+    try {
+      const deletedId = await delApi(id);
+      const nextAll = all.filter(l => l.id !== deletedId);
+      const nextSeasons = [...new Set(nextAll.map(l => l.season))];
+      setAll(nextAll);
+      setSeasonsState(nextSeasons.length > 0 ? nextSeasons : [2025]);
+      if (!nextAll.some(l => l.season === curSeason) && nextSeasons.length > 0) setSeason(nextSeasons[0]);
+      if (editL?.id === deletedId) {
+        setEL(null);
+        setSF(false);
+      }
+    } catch (e) { console.error(e); }
+  };
 
   const ttS = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 11, color: "#1e293b", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" };
   const P = { background: "#f8fafc", borderRadius: 10, padding: "16px 18px", border: "0.5px solid #f1f5f9" };

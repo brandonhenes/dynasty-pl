@@ -92,6 +92,12 @@ export async function upsertLeague(league) {
 
 export async function deleteLeague(id) {
   if (!supabase) return;
-  const { error } = await supabase.from("league_financials").delete().eq("id", id);
+  const { data, error } = await supabase
+    .from("league_financials")
+    .delete()
+    .eq("id", id)
+    .select("id")
+    .single();
   if (error) throw error;
+  return data?.id ?? id;
 }
